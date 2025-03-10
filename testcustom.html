@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Customize Your Room</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    .container {
+      max-width: 600px;
+      margin: auto;
+    }
+    input, select, textarea {
+      width: 100%;
+      padding: 8px;
+      margin: 8px 0;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+    }
+    .message {
+      margin-top: 20px;
+      font-weight: bold;
+      color: green;
+    }
+    .error {
+      margin-top: 20px;
+      font-weight: bold;
+      color: red;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Customize Your Room</h1>
+    <form id="customizeForm">
+      <label for="layoutName">Layout Name:</label>
+      <input type="text" id="layoutName" name="layoutName" placeholder="e.g., Living Room Layout" required>
+
+      <label for="roomShape">Room Shape:</label>
+      <select id="roomShape" name="roomShape">
+        <option value="rectangle">Rectangle</option>
+        <option value="L-shape">L-shape</option>
+      </select>
+
+      <label for="roomLength">Room Length (cm):</label>
+      <input type="number" id="roomLength" name="roomLength" required>
+
+      <label for="roomWidth">Room Width (cm):</label>
+      <input type="number" id="roomWidth" name="roomWidth" required>
+
+      <!-- Danh sách sản phẩm (items) -->
+      <!-- Front-end chỉ cho phép điều chỉnh vị trí, không thay đổi kích thước -->
+      <label for="items">Items (Enter JSON array):</label>
+      <textarea id="items" name="items" rows="4" placeholder='e.g., [{"productId": "64f8a63a4494775b0b684a86", "positionX": 100, "positionY": 50}]'></textarea>
+
+      <button type="submit">Save Layout</button>
+    </form>
+
+    <div class="message" id="messageContainer"></div>
+    <div class="error" id="errorContainer"></div>
+  </div>
+
+  <script>
+    const form = document.getElementById('customizeForm');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      document.getElementById('messageContainer').textContent = '';
+      document.getElementById('errorContainer').textContent = '';
+
+      const layoutName = document.getElementById('layoutName').value;
+      const roomShape = document.getElementById('roomShape').value;
+      const roomLength = parseInt(document.getElementById('roomLength').value, 10);
+      const roomWidth = parseInt(document.getElementById('roomWidth').value, 10);
+      let items = [];
+      try {
+        items = JSON.parse(document.getElementById('items').value || '[]');
+      } catch (err) {
+        document.getElementById('errorContainer').textContent = 'Invalid items JSON format.';
+        return;
+      }
+
+      const data = { layoutName, roomShape, roomLength, roomWidth, items };
+
+      try {
+        const response = await fetch('http://localhost:5001/api/customize', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+
+        const result = await response.json();
+        if (result.success) {
+          document.getElementById('messageContainer').textContent = result.message;
+          form.reset();
+        } else {
+          document.getElementById('errorContainer').textContent = result.message || 'Error saving layout.';
+        }
+      } catch (error) {
+        console.error('Error saving layout:', error);
+        document.getElementById('errorContainer').textContent = 'Error saving layout.';
+      }
+    });
+  </script>
+</body>
+</html>

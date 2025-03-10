@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Payment Simulation - Minimal Demo</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    .container {
+      max-width: 600px;
+      margin: auto;
+      text-align: center;
+    }
+    .message {
+      margin-top: 20px;
+      font-weight: bold;
+      color: green;
+    }
+    .error {
+      color: red;
+      margin-top: 20px;
+    }
+    button {
+      margin: 10px;
+      padding: 10px 20px;
+      font-size: 16px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Payment Simulation (Minimal)</h1>
+    <p>Order ID: <span id="orderIdSpan"></span></p>
+
+    <!-- Nút để mô phỏng initPayment và confirmPayment -->
+    <div>
+      <button id="initPaymentBtn">Init Payment</button>
+      <button id="confirmPaymentBtn">Confirm Payment</button>
+    </div>
+
+    <!-- Hiển thị message trả về từ server -->
+    <div class="message" id="messageContainer"></div>
+    <!-- Hiển thị lỗi (nếu có) -->
+    <div class="error" id="errorContainer"></div>
+  </div>
+
+  <script>
+    // Thay bằng ID đơn hàng thật từ MongoDB Compass
+    const orderId = "67cbc316e289c497b41eab9a"; 
+    const baseUrl = "http://localhost:5001/api/orders";
+
+    // Hiển thị orderId trên giao diện
+    document.getElementById("orderIdSpan").textContent = orderId;
+
+    // Hàm xóa thông báo cũ
+    function clearMessages() {
+      document.getElementById("messageContainer").textContent = "";
+      document.getElementById("errorContainer").textContent = "";
+    }
+
+    // 1. Gọi API initPayment
+    document.getElementById("initPaymentBtn").addEventListener("click", async () => {
+      clearMessages();
+      const initUrl = `${baseUrl}/${orderId}/init`;
+      try {
+        const response = await fetch(initUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          // Bạn có thể chọn "bank-transfer" hoặc "momo" (hay "bank") tùy ý
+          body: JSON.stringify({ paymentMethod: "momo" })
+        });
+        const data = await response.json();
+        console.log("Init Payment Response:", data);
+
+        if (data.success) {
+          document.getElementById("messageContainer").textContent = data.message;
+        } else {
+          document.getElementById("errorContainer").textContent = "Error: " + (data.message || "Unknown error");
+        }
+      } catch (error) {
+        console.error("Error init payment:", error);
+        document.getElementById("errorContainer").textContent = "Error init payment.";
+      }
+    });
+
+    // 2. Gọi API confirmPayment
+    document.getElementById("confirmPaymentBtn").addEventListener("click", async () => {
+      clearMessages();
+      const confirmUrl = `${baseUrl}/${orderId}/confirm`;
+      try {
+        const response = await fetch(confirmUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" }
+        });
+        const data = await response.json();
+        console.log("Confirm Payment Response:", data);
+
+        if (data.success) {
+          document.getElementById("messageContainer").textContent = data.message;
+        } else {
+          document.getElementById("errorContainer").textContent = "Error: " + (data.message || "Unknown error");
+        }
+      } catch (error) {
+        console.error("Error confirm payment:", error);
+        document.getElementById("errorContainer").textContent = "Error confirm payment.";
+      }
+    });
+  </script>
+</body>
+</html>

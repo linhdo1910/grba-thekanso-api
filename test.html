@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test Product Base64 Image</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    .product {
+      border: 1px solid #ccc;
+      padding: 10px;
+      max-width: 300px;
+      margin: 20px auto;
+      text-align: center;
+    }
+    .product img {
+      max-width: 100%;
+      height: auto;
+    }
+  </style>
+</head>
+<body>
+  <h1>Product Base64 Image Test</h1>
+  <div id="product"></div>
+
+  <script>
+    // URL của API lấy thông tin sản phẩm
+    // Sử dụng endpoint GET /api/products/:id để lấy một sản phẩm cụ thể.
+    const apiUrl = 'http://localhost:5001/api/products/67ccf9018f502cb9bcc7bca4';
+
+    // Fetch dữ liệu sản phẩm từ API
+    fetch(apiUrl)
+      .then(response => response.json())
+      .then(data => {
+        if (data.success && data.data) {
+          // Nếu data.data là mảng thì lấy phần tử đầu tiên, nếu không thì data.data chính là object sản phẩm.
+          const product = Array.isArray(data.data) ? data.data[0] : data.data;
+          
+          const productDiv = document.getElementById('product');
+          productDiv.classList.add('product');
+
+          // Hiển thị tên sản phẩm
+          const title = document.createElement('h2');
+          title.textContent = product.productName;
+          productDiv.appendChild(title);
+
+          // Hiển thị ảnh bìa (coverImage)
+          if (product.coverImage) {
+            const img = document.createElement('img');
+            img.src = product.coverImage;  // Đây phải là chuỗi Base64, ví dụ: "data:image/jpeg;base64,..."
+            img.alt = product.productName;
+            productDiv.appendChild(img);
+          } else {
+            const noImg = document.createElement('p');
+            noImg.textContent = 'No cover image available';
+            productDiv.appendChild(noImg);
+          }
+
+          // Hiển thị mô tả sản phẩm
+          if (product.productDescription) {
+            const description = document.createElement('p');
+            description.textContent = product.productDescription;
+            productDiv.appendChild(description);
+          }
+        } else {
+          document.getElementById('product').textContent = 'No product found.';
+        }
+      })
+      .catch(error => {
+        console.error('Error fetching product:', error);
+        document.getElementById('product').textContent = 'Error fetching product.';
+      });
+  </script>
+</body>
+</html>
