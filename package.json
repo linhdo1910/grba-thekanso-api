@@ -10,16 +10,30 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "bcryptjs": "^3.0.2",
     "body-parser": "^1.20.3",
     "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "express-fileupload": "^1.5.1",
+    "jsonwebtoken": "^9.0.2",
     "mongoclient": "^1.0.3",
     "mongodb": "^6.13.1",
-    "mongoose": "^8.10.1"
+    "mongoose": "^8.10.1",
+    "nodemailer": "^6.10.0"
   },
   "devDependencies": {
     "morgan": "^1.10.0",
     "nodemon": "^3.1.9"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/linhdo1910/grba-thekanso-api.git"
+  },
+  "keywords": [],
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/linhdo1910/grba-thekanso-api/issues"
+  },
+  "homepage": "https://github.com/linhdo1910/grba-thekanso-api#readme"
 }
