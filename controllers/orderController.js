@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 const Order = require('../models/Orders');
-const Product = require('../models/Product');
+const Product = require('../models/Products');
 const nodemailer = require('nodemailer');
 
 // Retrieve all orders
