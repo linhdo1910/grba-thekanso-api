@@ -4,25 +4,18 @@ const productController = require('../controllers/productController');
 
 console.log("Product routes loaded");
 
-// Lấy tất cả sản phẩm
-router.get('/', productController.getAllProducts);
-
-// Tìm kiếm sản phẩm theo query (ví dụ: /api/products/search?keyword=... )
+// Các route chuyên biệt cần được khai báo trước
 router.get('/search', productController.searchProducts);
+router.get('/bySubCategory', productController.getProductsBySubCategory);
+router.get('/byColor', productController.getProductsByColor);
+router.get('/filters', productController.getFilterOptions);
 
-// Lấy sản phẩm theo ID
+// Các route chung
+router.get('/', productController.getAllProducts);
 router.get('/:id', productController.getProductById);
-
-// Tạo sản phẩm mới
 router.post('/', productController.createProduct);
-
-// Cập nhật sản phẩm
 router.put('/:id', productController.updateProduct);
-
-// Xóa sản phẩm
 router.delete('/:id', productController.deleteProduct);
-
-// Cập nhật đánh giá 
 router.put('/rating/:id', productController.updateRating);
 
 module.exports = router;

@@ -1,19 +1,20 @@
 const jwt = require('jsonwebtoken');
 
 const authenticateToken = (req, res, next) => {
-    const token = req.headers['authorization']?.split(' ')[1]; // Lấy token từ header
+  const authHeader = req.headers['authorization'];
+  // Không có header hoặc không bắt đầu bằng "Bearer " => trả về 401
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ message: 'Unauthorized. Please login.' });
+  }
 
-    if (!token) {
-        return res.status(401).json({ message: 'Access denied. No token provided.' });
-    }
-
-    jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
-        if (err) {
-            return res.status(403).json({ message: 'Invalid token.' });
-        }
-        req.user = user; // Lưu thông tin người dùng vào req
-        next(); // Tiếp tục đến middleware hoặc route tiếp theo
-    });
+  const token = authHeader.split(' ')[1];
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'jwt_secret');
+    req.user = decoded;
+    next();
+  } catch (error) {
+    return res.status(403).json({ message: 'Invalid token.' });
+  }
 };
 
-module.exports = authenticateToken; 
+module.exports = authenticateToken;

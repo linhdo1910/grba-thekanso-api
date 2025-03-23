@@ -1,10 +1,8 @@
-    const express = require('express');
-    const router = express.Router();
-    const customizeController = require('../controllers/customizeController');
+const express = require('express');
+const router = express.Router();
+const roomController = require('../controllers/customizeController');
 
-    router.post('/', customizeController.createLayout);
-    router.get('/:id', customizeController.getLayout);
-    router.put('/:id', customizeController.updateLayout);
-    router.delete('/:id', customizeController.deleteLayout);
+// Route để lưu kích thước phòng và sản phẩm người dùng chọn
+router.post('/save-room-dimension', roomController.saveRoomDimension);
 
-    module.exports = router;
+module.exports = router;

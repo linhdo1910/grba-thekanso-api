@@ -1,4 +1,3 @@
-// controllers/blogController.js
 const Blog = require('../models/Blog');
 
 exports.createBlog = async (req, res) => {
@@ -65,3 +64,8 @@ exports.deleteBlog = async (req, res) => {
         res.status(500).json({ message: 'Server error' });
     }
 };
+
+
+
+
+

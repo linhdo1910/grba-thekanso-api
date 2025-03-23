@@ -1,88 +1,48 @@
-const Customize = require('../models/customize');
+const RoomDimension = require('../models/customize');
+const Product = require('../models/Products');
 
-exports.createLayout = async (req, res, next) => {
+exports.saveRoomDimension = async (req, res) => {
   try {
-    const layoutData = req.body;
-    const newLayout = await Customize.create(layoutData);
-    res.status(201).json({
-      success: true,
-      data: newLayout,
-      message: 'Layout created successfully',
-      error: ''
-    });
-  } catch (error) {
-    next(error);
-  }
-};
+    const { shape, length, width, height, area, selectedProducts } = req.body;
 
-exports.getLayout = async (req, res, next) => {
-  try {
-    const { id } = req.params;
-    const layout = await Customize.findById(id).populate('items.productId');
-    if (!layout) {
-      return res.status(404).json({
-        success: false,
-        data: null,
-        message: 'Layout not found',
-        error: 'Not found'
-      });
+    if (!shape || !length || !width || !selectedProducts || selectedProducts.length === 0) {
+      return res.status(400).json({ message: 'Missing required fields' });
     }
-    res.status(200).json({
-      success: true,
-      data: layout,
-      message: 'Layout retrieved',
-      error: ''
-    });
-  } catch (error) {
-    next(error);
-  }
-};
 
-exports.updateLayout = async (req, res, next) => {
-  try {
-    const { id } = req.params;
-    const layoutData = req.body;
-    const updatedLayout = await Customize.findByIdAndUpdate(id, layoutData, {
-      new: true
+    // Lưu thông tin kích thước phòng
+    const newRoomDimension = new RoomDimension({
+      shape,
+      length,
+      width,
+      height,
+      area,
+      selectedProducts
     });
-    if (!updatedLayout) {
-      return res.status(404).json({
-        success: false,
-        data: null,
-        message: 'Layout not found',
-        error: 'Not found'
-      });
-    }
-    res.status(200).json({
-      success: true,
-      data: updatedLayout,
-      message: 'Layout updated successfully',
-      error: ''
-    });
-  } catch (error) {
-    next(error);
-  }
-};
 
-exports.deleteLayout = async (req, res, next) => {
-  try {
-    const { id } = req.params;
-    const deletedLayout = await Customize.findByIdAndDelete(id);
-    if (!deletedLayout) {
-      return res.status(404).json({
-        success: false,
-        data: null,
-        message: 'Layout not found',
-        error: 'Not found'
-      });
-    }
-    res.status(200).json({
-      success: true,
-      data: null,
-      message: 'Layout deleted successfully',
-      error: ''
+    const savedRoomDimension = await newRoomDimension.save();
+
+    // Lấy thông tin sản phẩm từ cơ sở dữ liệu (tự động lấy các sản phẩm từ DB)
+    const productPromises = selectedProducts.map(async ({ productId, quantity }) => {
+      const product = await Product.findById(productId);  // Tìm sản phẩm trong DB
+      if (product) {
+        // Chỉ lưu tên sản phẩm, số lượng và giá sản phẩm vào RoomDimension
+        return {
+          productName: product.productName,
+          quantity,
+          price: product.productPrice
+        };
+      }
     });
+
+    const productsToSave = await Promise.all(productPromises);
+
+    // Cập nhật thông tin sản phẩm đã chọn
+    savedRoomDimension.selectedProducts = productsToSave;
+    await savedRoomDimension.save();
+
+    res.status(201).json(savedRoomDimension);
   } catch (error) {
-    next(error);
+    console.error('Error saving room dimension and products:', error);
+    res.status(500).json({ message: 'Error saving room dimension and products' });
   }
 };

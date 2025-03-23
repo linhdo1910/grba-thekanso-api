@@ -1,22 +1,16 @@
 const mongoose = require('mongoose');
 
-const customizeSchema = new mongoose.Schema({
-  userId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: false
-  },
-  layoutName: { type: String, default: '' },
-  roomShape: { type: String, default: '' },
-  roomLength: { type: Number, default: 0 },
-  roomWidth: { type: Number, default: 0 },
-  items: [
-    {
-      productId: { type: mongoose.Schema.Types.ObjectId, ref: 'Product' },
-      positionX: { type: Number, default: 0 },
-      positionY: { type: Number, default: 0 }
-    }
-  ]
-}, { timestamps: true });
+const roomDimensionSchema = new mongoose.Schema({
+  shape: String,
+  length: Number,
+  width: Number,
+  height: Number,
+  area: Number,
+  selectedProducts: [{
+    productName: { type: String, required: true },
+    quantity: { type: Number, required: true },
+    price: { type: Number, required: true },
+  }]
+});
 
-module.exports = mongoose.model('Customize', customizeSchema);
+module.exports = mongoose.model('customize', roomDimensionSchema);

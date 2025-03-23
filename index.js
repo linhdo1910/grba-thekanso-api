@@ -1,5 +1,3 @@
-// index.js (Merged)
-
 const express = require('express');
 const dotenv = require('dotenv');
 const cors = require('cors');
@@ -8,10 +6,8 @@ const bodyParser = require('body-parser');
 // Đọc biến môi trường
 dotenv.config();
 
-// Kết nối DB (chọn 1 file config db phù hợp)
-const connectDB = require('./config/db'); 
-// Hoặc nếu bạn dùng './configs/db' thì:
-// const connectDB = require('./configs/db');
+// Kết nối DB
+const connectDB = require('./config/db');
 
 // Import middleware xử lý lỗi
 const { errorHandler } = require('./middlewares/errorMiddleware');
@@ -25,57 +21,49 @@ const userRoutes = require('./routes/userRoutes');
 const blogRoutes = require('./routes/blogRoutes');
 const contactRoutes = require('./routes/contactRoutes');
 const cartRoutes = require('./routes/cartRoutes');
-
 const productRoutes = require('./routes/productRoutes');
-
 const paymentRoutes = require('./routes/paymentRoutes');
-
 const customizeRoutes = require('./routes/customizeRoutes');
-
 const orderRoutes = require('./routes/orderRoutes');
+const discountCodeRoutes = require('./routes/discountCodeRoutes');
 
-
-// Khởi tạo app và kết nối DB
-connectDB(); // Nếu connectDB trả về Promise, bạn có thể .then() hoặc await
+connectDB();
 const app = express();
 
-// Thiết lập middleware
-app.use(cors());
+app.use(cors({
+  origin: "http://localhost:4200",
+  credentials: true
+}));
+
 app.use(bodyParser.json());
 
-// Đăng ký / Đăng nhập
+// Routes không yêu cầu xác thực
 app.use('/api/auth', authRoutes);
-
-// User (cần token)
-app.use('/api/users', authenticateToken, userRoutes);
-
-// Blog (cần token)
 app.use('/api/blogs', blogRoutes);
-
-// Liên hệ (cần token)
+app.use('/api/discount-codes', discountCodeRoutes);
+app.use('/api/customize', customizeRoutes);
+// Các routes cần token
+app.use('/api/users', authenticateToken, userRoutes);
 app.use('/api/contact', authenticateToken, contactRoutes);
-
-// Giỏ hàng (cần token)
 app.use('/api/cart', authenticateToken, cartRoutes);
 
-// Quản lý sản phẩm
+// Các route sản phẩm (không yêu cầu token)
 app.use('/api/products', productRoutes);
 
-// Payment simulation + Orders
-app.use('/api/orders', paymentRoutes);    // Payment init, confirm
-app.use('/api/orders', authenticateToken, orderRoutes); // Tạo, cập nhật, lấy đơn hàng
+// Đăng ký endpoint tạo đơn hàng (cho guest hoặc user)
+app.use('/api/orders', paymentRoutes);
 
-// Tùy chỉnh layout
+// Các endpoint khác liên quan đến đơn hàng, yêu cầu token
+app.use('/api/orders', authenticateToken, orderRoutes);
+
+// Route tùy chỉnh layout
 app.use('/api/customize', customizeRoutes);
 
 // Xử lý lỗi toàn cục
 app.use(errorHandler);
 
 // Port
-const PORT = process.env.PORT || 4002;
-
-// Lắng nghe
+const PORT = process.env.PORT || 4200;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
-

@@ -1,7 +1,5 @@
-// models/orderModel.js
 const mongoose = require('mongoose');
 
-// Thông tin từng sản phẩm trong đơn hàng
 const orderProductSchema = new mongoose.Schema({
   productId: { type: mongoose.Schema.Types.ObjectId, ref: 'Product', required: true },
   productName: { type: String, required: true },
@@ -10,7 +8,6 @@ const orderProductSchema = new mongoose.Schema({
   quantity: { type: Number, required: true, min: 1 }
 });
 
-// Thông tin giao hàng
 const shipToSchema = new mongoose.Schema({
   fullName: { type: String, required: true },
   city: { type: String, required: true },
@@ -22,114 +19,55 @@ const shipToSchema = new mongoose.Schema({
   note: { type: String }
 });
 
-// Lịch sử giao dịch (transaction history)
 const transactionSchema = new mongoose.Schema({
   action: {
     type: String,
     required: true,
     enum: ['CREATE_ORDER', 'UPDATE_STATUS', 'UPDATE_SHIPPING', 'CANCEL_ORDER']
   },
-  timestamp: {
-    type: Date,
-    default: Date.now
-  },
-  details: {
-    type: Object,
-    required: true
-  },
+  timestamp: { type: Date, default: Date.now },
+  details: { type: Object, required: true },
   status: {
     type: String,
     required: true,
-    enum: ['Pending', 'Processing', 'Delivering', 'Finished', 'Cancelled']
+    enum: ['Order received', 'Processing', 'On the way', 'Delivered']
   }
 });
 
-// Schema chính cho Order
 const orderSchema = new mongoose.Schema({
-  // Nếu muốn để MongoDB tự sinh _id dạng ObjectId, bỏ _id: { type: String, required: true } đi
-  // Hoặc nếu bạn cần custom ID, giữ _id: String
-  // _id: { type: String, required: true },
-
-  userId: { 
-    type: mongoose.Schema.Types.ObjectId, 
-    ref: 'User', 
-    required: false 
-  },
-  
-  userName: { 
-    type: String, 
-    required: true 
-  }, // Có thể bỏ nếu bạn luôn dùng userId, hoặc giữ để hiển thị nhanh
-
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: false },
+  userName: { type: String, required: true },
   products: {
     type: [orderProductSchema],
     required: true,
     validate: [arr => arr.length > 0, 'Order must have at least one product']
   },
-
-  shipTo: {
-    type: shipToSchema,
-    required: true
-  },
-
-  shippingFee: {
-    type: Number,
-    required: true,
-    min: 0
-  },
-  subTotal: {
-    type: Number,
-    required: true,
-    min: 0
-  },
-  discountPrice: {
-    type: Number,
-    required: true,
-    min: 0,
-    default: 0
-  },
-  totalPrice: {
+  shipTo: { type: shipToSchema, required: true },
+  subTotal: { type: Number, required: true, min: 0 },
+  discountPrice: { type: Number, required: true, min: 0, default: 0 },
+  total: {
     type: Number,
     required: true,
     min: 0,
     validate: {
       validator: function(value) {
-        return value === this.subTotal + this.shippingFee - this.discountPrice;
+        return value === this.subTotal - this.discountPrice;
       },
-      message: 'Total price must equal subTotal + shippingFee - discountPrice'
+      message: 'Total must equal subTotal - discountPrice'
     }
   },
-
-  orderDate: {
-    type: Date,
-    default: Date.now,
-    required: true
-  },
-
-  paymentMethod: {
-    type: String,
-    required: true,
-    enum: ['COD', 'Banking', 'Momo', 'ZaloPay']
-  },
-
-  status: {
-    type: String,
-    required: true,
-    enum: ['Pending', 'Processing', 'Delivering', 'Finished', 'Cancelled'],
-    default: 'Pending'
-  },
-
+  orderDate: { type: Date, default: Date.now, required: true },
+  paymentMethod: { type: String, required: true, enum: ['Banking', 'Momo', 'COD'] },
+  status: { type: String, required: true, enum: ['Order received', 'Processing', 'On the way', 'Delivered'], default: 'Order received' },
   staffNote: { type: String },
-
-  transactionHistory: [transactionSchema]
-
+  transactionHistory: [transactionSchema],
+  // Nếu FE cần trường "date" để hiển thị, ta đặt alias bằng orderDate:
+  date: { type: Date, default: Date.now }
 }, { timestamps: true });
 
-// Tạo index để hỗ trợ tìm kiếm
 orderSchema.index({ userName: 1 });
 orderSchema.index({ orderDate: -1 });
 orderSchema.index({ status: 1 });
 
 const Order = mongoose.model('Order', orderSchema);
-
 module.exports = Order;

@@ -1,4 +1,3 @@
-// middlewares/errorMiddleware.js
 
 // Middleware xử lý lỗi toàn cục
 const errorHandler = (err, req, res, next) => {

@@ -1,33 +1,40 @@
-const User = require('../models/User');
-const jwt = require('jsonwebtoken');
-const nodemailer = require('nodemailer');
 const crypto = require('crypto');
-const bcrypt = require('bcryptjs');
+const bcrypt = require('bcrypt'); 
+const jwt = require('jsonwebtoken');
+const User = require('../models/User');
 
 exports.signup = async (req, res) => {
   try {
-    const { name, email, password, phoneNumber, address, profilePicture } = req.body;
+    const { name, email, password } = req.body;
+
+    if (!name || !email || !password) {
+      return res.status(400).json({ message: 'Please provide name, email, and password.' });
+    }
+
+    // Kiểm tra nếu email đã tồn tại
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return res.status(400).json({ message: 'User already exists' });
+      return res.status(409).json({ message: 'Email is already registered.' });
     }
-    // Hash mật khẩu trước khi lưu
-    const hashedPassword = await bcrypt.hash(password, 12);
+
+    // Mã hóa mật khẩu trước khi lưu vào DB
+    const hashedPassword = await bcrypt.hash(password, 10);
 
     const newUser = new User({
       name,
       email,
-      password: hashedPassword,
-      phoneNumber,
-      address,
-      profilePicture
+      password: hashedPassword
     });
+
+    // Lưu người dùng vào DB
     await newUser.save();
 
-    res.status(201).json({ message: 'User registered successfully' });
+    return res.status(201).json({
+      message: 'User registered successfully',
+      userId: newUser._id
+    });
   } catch (error) {
-    console.error('Error during signup:', error);
-    res.status(500).json({ message: 'Server error' });
+    return res.status(500).json({ message: 'Internal Server Error', error: error.message });
   }
 };
 
@@ -39,13 +46,11 @@ exports.login = async (req, res) => {
       return res.status(400).json({ message: 'Invalid credentials' });
     }
 
-    // So sánh mật khẩu đã được hash
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res.status(400).json({ message: 'Invalid credentials' });
     }
 
-    // Tạo JWT token
     const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
     res.status(200).json({ token, userId: user._id });
   } catch (error) {
@@ -57,66 +62,66 @@ exports.login = async (req, res) => {
 exports.forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
-    const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+    if (!email) {
+      return res.status(400).json({ message: "Please provide an email." });
     }
 
+    const user = await User.findOne({ email });
+    if (!user) {
+      // Nếu email không tồn tại, bạn có thể trả về 404 hoặc thông báo cho người dùng
+      return res.status(404).json({ message: "Email not found in the system." });
+    }
+
+    // Tạo token reset mật khẩu
     const resetToken = crypto.randomBytes(32).toString('hex');
+    // Lưu token và thời hạn vào user
     user.resetPasswordToken = resetToken;
-    user.resetPasswordExpires = Date.now() + 3600000; // 1 hour
+    user.resetPasswordExpires = Date.now() + 3600000; // 1 giờ
     await user.save();
 
-    const transporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        user: process.env.EMAIL,
-        pass: process.env.EMAIL_PASSWORD
-      }
-    });
-
-    const mailOptions = {
-      from: process.env.EMAIL,
-      to: user.email,
-      subject: 'Password Reset',
-      text: `You are receiving this because you (or someone else) have requested the reset of the password for your account.\n\n
-Please click on the following link, or paste this into your browser to complete the process:\n\n
-http://localhost:3000/reset/${resetToken}\n\n
-If you did not request this, please ignore this email and your password will remain unchanged.\n`
-    };
-
-    transporter.sendMail(mailOptions, (error, info) => {
-      if (error) {
-        return res.status(500).json({ message: 'Error sending email' });
-      }
-      res.status(200).json({ message: 'Email sent' });
+    // Trả về reset token cho client (để mô phỏng flow)
+    res.status(200).json({
+      message: "Password reset link generated successfully.",
+      resetLink: `http://localhost:3000/reset/${resetToken}`,
+      userId: user._id
     });
   } catch (error) {
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 };
 
 exports.resetPassword = async (req, res) => {
   try {
     const { token, newPassword } = req.body;
+
+    if (!token || !newPassword) {
+      return res.status(400).json({ message: "Please provide token and new password." });
+    }
+
+    if (newPassword.length < 8) {
+      return res.status(400).json({ message: "Password must be at least 8 characters." });
+    }
+
     const user = await User.findOne({
       resetPasswordToken: token,
       resetPasswordExpires: { $gt: Date.now() }
     });
 
     if (!user) {
-      return res.status(400).json({ message: 'Invalid or expired token' });
+      return res.status(400).json({ message: "Invalid or expired token." });
     }
 
-    // Hash mật khẩu mới trước khi lưu
     const hashedPassword = await bcrypt.hash(newPassword, 12);
     user.password = hashedPassword;
     user.resetPasswordToken = undefined;
     user.resetPasswordExpires = undefined;
     await user.save();
 
-    res.status(200).json({ message: 'Password reset successfully' });
+    res.status(200).json({ message: "Password reset successfully." });
   } catch (error) {
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+  exports.logout = (req, res) => {
+    res.status(200).json({ message: "Logout successful" });
+  };

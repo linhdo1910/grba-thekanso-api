@@ -1,5 +1,4 @@
 const mongoose = require('mongoose');
-
 const CartItemSchema = new mongoose.Schema({
   productId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -15,7 +14,12 @@ const CartItemSchema = new mongoose.Schema({
   addedAt: {
     type: Date,
     default: Date.now
-  }
+  },
+  price: { type: Number, required: true },
+  originalPrice: { type: Number, required: true },
+  discount: { type: Number, default: 0 } ,
+  color: { type: String }, 
+  size: { type: String }   
 });
 
 const CartSchema = new mongoose.Schema({
@@ -23,23 +27,8 @@ const CartSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: true,
-    unique: true
+    unique: true,
+    index: true
   },
-  items: [CartItemSchema],
-  updatedAt: {
-    type: Date,
-    default: Date.now
-  }
+  items: [CartItemSchema]
 }, { timestamps: true });
-
-// Virtual để tính tổng giá trị giỏ hàng (nếu muốn)
-CartSchema.virtual('totalPrice').get(function() {
-  // Lưu ý: để tính được tổng, bạn cần đảm bảo rằng các sản phẩm đã được populate
-  if (!this.items || !Array.isArray(this.items)) return 0;
-  return this.items.reduce((sum, item) => {
-    // Giả sử mỗi item có trường 'price' được lấy từ sản phẩm đã populate, nếu không, bạn có thể tính lại khi update giỏ hàng.
-    return sum + (item.price || 0) * item.quantity;
-  }, 0);
-});
-
-module.exports = mongoose.model('Cart', CartSchema);

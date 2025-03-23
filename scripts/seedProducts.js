@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 const csv = require('csvtojson');
 const fs = require('fs');
 const path = require('path');
-const Product = require('../models/productModel');
+const Product = require('../models/Products');
 require('dotenv').config();
 
 mongoose.connect(process.env.MONGO_URI)
@@ -39,7 +39,7 @@ async function seedProducts() {
 
       return {
         productName: item.productName,
-        productSubName: item.productSubName,
+        brandName: item.brandName,
         productPrice: Number(item.productPrice.replace(/[^0-9.]/g, '')) || 0,
         productDescription: item.productDescription,
         productStock: Number(item.productStock) || 0,
@@ -50,7 +50,10 @@ async function seedProducts() {
         color: item.Color || '',
         size: item.Size || '',
         materials: item.Materials || '',
-        sort: item.Sort || ''
+        sort: item.Sort || '',
+        note:item.note,
+        reviews: Number(item.reviews),
+        rating: Number(item.rating)
       };
     });
 
