@@ -163,6 +163,35 @@ const getOrdersByUsername = async (req, res, next) => {
     res.status(500).json({ message: error.message });
   }
 };
+const cancelOrder = async (req, res) => {
+  try {
+    // Tìm đơn hàng theo ID
+    const order = await Order.findById(req.params.id);
+    if (!order) {
+      return res.status(404).json({ message: 'Order not found' });
+    }
+    if (order.status !== 'Processing') {
+      return res.status(400).json({ message: 'Order can only be cancelled when its status is Processing.' });
+    }  
+    order.status = 'Cancelled';
+    order.transactionHistory.push({
+      action: 'CANCEL_ORDER',
+      timestamp: new Date(),
+      details: { note: 'Order cancelled by user' },
+      status: 'Cancelled'
+    });
+
+    await order.save();
+    return res.json({
+      message: 'Order cancelled successfully',
+      order
+    });
+  } catch (error) {
+    console.error('Error cancelling order:', error);
+    return res.status(500).json({ message: error.message });
+  }
+};
+
 
 module.exports = {
   createOrder,
@@ -170,5 +199,7 @@ module.exports = {
   getOrderById,
   updateOrder,
   searchOrders,
-  getOrdersByUsername
+  getOrdersByUsername,
+  cancelOrder,
+  
 };

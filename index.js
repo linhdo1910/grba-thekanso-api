@@ -26,7 +26,7 @@ const paymentRoutes = require('./routes/paymentRoutes');
 const customizeRoutes = require('./routes/customizeRoutes');
 const orderRoutes = require('./routes/orderRoutes');
 const discountCodeRoutes = require('./routes/discountCodeRoutes');
-
+const reviewRoutes = require('./routes/reviewRoutes');
 connectDB();
 const app = express();
 
@@ -35,13 +35,15 @@ app.use(cors({
   credentials: true
 }));
 
-app.use(bodyParser.json());
+app.use(express.json({ limit: '10mb' })); // Thay vì 500mb, 10mb là đủ cho hầu hết trường hợp
+app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
 // Routes không yêu cầu xác thực
 app.use('/api/auth', authRoutes);
 app.use('/api/blogs', blogRoutes);
 app.use('/api/discount-codes', discountCodeRoutes);
 app.use('/api/customize', customizeRoutes);
+app.use('/api/users/logout', userRoutes);
 // Các routes cần token
 app.use('/api/users', authenticateToken, userRoutes);
 app.use('/api/contact', authenticateToken, contactRoutes);
@@ -58,6 +60,9 @@ app.use('/api/orders', authenticateToken, orderRoutes);
 
 // Route tùy chỉnh layout
 app.use('/api/customize', customizeRoutes);
+
+//rRoute review
+app.use('/api/review', reviewRoutes);
 
 // Xử lý lỗi toàn cục
 app.use(errorHandler);

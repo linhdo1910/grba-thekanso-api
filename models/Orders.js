@@ -19,20 +19,20 @@ const shipToSchema = new mongoose.Schema({
   note: { type: String }
 });
 
-const transactionSchema = new mongoose.Schema({
-  action: {
-    type: String,
-    required: true,
-    enum: ['CREATE_ORDER', 'UPDATE_STATUS', 'UPDATE_SHIPPING', 'CANCEL_ORDER']
-  },
-  timestamp: { type: Date, default: Date.now },
-  details: { type: Object, required: true },
-  status: {
-    type: String,
-    required: true,
-    enum: ['Order received', 'Processing', 'On the way', 'Delivered']
-  }
-});
+  const transactionSchema = new mongoose.Schema({
+    action: {
+      type: String,
+      required: true,
+      enum: ['CREATE_ORDER', 'UPDATE_STATUS', 'UPDATE_SHIPPING', 'CANCEL_ORDER']
+    },
+    timestamp: { type: Date, default: Date.now },
+    details: { type: Object, required: true },
+    status: {
+      type: String,
+      required: true,
+      enum: ['Order received', 'Processing', 'On the way', 'Delivered','Cancelled']
+    }
+  });
 
 const orderSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: false },
@@ -58,7 +58,7 @@ const orderSchema = new mongoose.Schema({
   },
   orderDate: { type: Date, default: Date.now, required: true },
   paymentMethod: { type: String, required: true, enum: ['Banking', 'Momo', 'COD'] },
-  status: { type: String, required: true, enum: ['Order received', 'Processing', 'On the way', 'Delivered'], default: 'Order received' },
+  status: { type: String, required: true, enum: ['Order received', 'Processing', 'On the way', 'Delivered','Cancelled'], default: 'Order received' },
   staffNote: { type: String },
   transactionHistory: [transactionSchema],
   // Nếu FE cần trường "date" để hiển thị, ta đặt alias bằng orderDate:
